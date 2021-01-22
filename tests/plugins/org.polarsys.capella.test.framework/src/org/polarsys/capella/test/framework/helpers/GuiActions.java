@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 
 import org.eclipse.amalgam.explorer.activity.ui.ActivityExplorerActivator;
 import org.eclipse.amalgam.explorer.activity.ui.api.preferences.PreferenceConstants;
@@ -27,6 +29,8 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.jobs.IJobChangeEvent;
+import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.emf.ecore.EObject;
@@ -395,13 +399,46 @@ public class GuiActions {
     job.schedule();
   }
 
-  public static void refreshAllSubRepresentations(IFile airdFile, Session session) {
+  public static void refreshAllSubRepresentations(IFile airdFile, Session session, Runnable atEnd) {
     Collection<DRepresentationDescriptor> representationsToRefresh = DialectManager.INSTANCE
         .getAllRepresentationDescriptors(session);
     Job job = new RefreshDiagramsCommandHandler().new RefreshDiagramsJob(representationsToRefresh, session,
         Display.getDefault());
     job.setUser(true);
     job.schedule();
+    job.addJobChangeListener(new IJobChangeListener() {
+      
+      @Override
+      public void sleeping(IJobChangeEvent event) {
+        
+      }
+      
+      @Override
+      public void scheduled(IJobChangeEvent event) {
+        
+      }
+      
+      @Override
+      public void running(IJobChangeEvent event) {
+        
+      }
+      
+      @Override
+      public void done(IJobChangeEvent event) {
+        if (atEnd != null) {
+          atEnd.run();
+        }
+      }
+      
+      @Override
+      public void awake(IJobChangeEvent event) {
+        
+      }
+      
+      @Override
+      public void aboutToRun(IJobChangeEvent event) {
+      }
+    });
   }
 
   public static void closeAllOpenedEditors() {

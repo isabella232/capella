@@ -23,6 +23,7 @@ import java.util.Set;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ProjectScope;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -36,14 +37,17 @@ import org.eclipse.sirius.business.api.session.Session;
 import org.eclipse.sirius.business.api.session.SessionManager;
 import org.eclipse.sirius.business.api.session.danalysis.DAnalysisSession;
 import org.eclipse.sirius.ui.business.api.dialect.DialectEditor;
+import org.eclipse.sirius.ui.business.api.preferences.SiriusUIPreferencesKeys;
 import org.eclipse.sirius.ui.business.api.session.IEditingSession;
 import org.eclipse.sirius.ui.business.api.session.SessionEditorInput;
 import org.eclipse.sirius.ui.business.api.session.SessionUIManager;
 import org.eclipse.sirius.ui.business.api.viewpoint.ViewpointSelectionCallback;
+import org.eclipse.sirius.viewpoint.DAnalysis;
 import org.eclipse.sirius.viewpoint.DRepresentation;
-import org.eclipse.sirius.viewpoint.DRepresentationDescriptor;
+import org.eclipse.sirius.viewpoint.SiriusPlugin;
 import org.eclipse.sirius.viewpoint.description.Viewpoint;
 import org.eclipse.ui.IReusableEditor;
+import org.osgi.framework.FrameworkUtil;
 import org.polarsys.capella.common.ef.ExecutionManager;
 import org.polarsys.capella.common.ef.command.AbstractNonDirtyingCommand;
 import org.polarsys.capella.common.helpers.EObjectExt;
@@ -54,7 +58,6 @@ import org.polarsys.capella.common.mdsofa.common.misc.Couple;
 import org.polarsys.capella.core.data.capellamodeller.Project;
 import org.polarsys.capella.core.libraries.utils.IFileRequestor;
 import org.polarsys.capella.core.model.handler.command.CapellaResourceHelper;
-import org.polarsys.capella.core.model.handler.helpers.RepresentationHelper;
 import org.polarsys.capella.core.sirius.ui.actions.CloseSessionAction;
 import org.polarsys.capella.core.sirius.ui.session.ISessionAdvisor;
 
@@ -91,6 +94,7 @@ public class SessionHelper {
 
   /**
    * Get the underlying analysis file (i.e aird file)
+   * 
    * @param session
    * @return the root aird resource used to open specified session.
    */
@@ -100,6 +104,7 @@ public class SessionHelper {
 
   /**
    * Get the Capella project (only one instance) for given session.
+   * 
    * @param session
    * @return must be not <code>null</code>.
    */
@@ -121,7 +126,9 @@ public class SessionHelper {
   /**
    * Get a session for given diagram file (i.e aird file).<br>
    * Only compare the given file with the first diagram resource.
-   * @param firstDiagramResourceFile the file is expected to be the first diagram file contained in a session.
+   * 
+   * @param firstDiagramResourceFile
+   *          the file is expected to be the first diagram file contained in a session.
    * @return <code>null</code> if no session found among all active sessions.
    */
   public static Session getSession(IFile firstDiagramResourceFile) {
@@ -144,6 +151,7 @@ public class SessionHelper {
 
   /**
    * Get a session for given analysis file.<br>
+   * 
    * @param diagramResourceFile
    * @return <code>null</code> if no session found among all active sessions.
    */
@@ -166,6 +174,7 @@ public class SessionHelper {
 
   /**
    * Get a session from a representation resource.
+   * 
    * @param airdResource
    * @return
    */
@@ -182,6 +191,7 @@ public class SessionHelper {
 
   /**
    * Get the sessions from structured selection.
+   * 
    * @return a not <code>null</code> list.
    */
   public static List<Couple<Session, IFile>> getSessionsFromSelection(IStructuredSelection selection) {
@@ -202,9 +212,9 @@ public class SessionHelper {
 
   /**
    * Get project all active sessions (among all active sessions) in given project.
+   * 
    * @param project
-   * @return a not <code>null</code> array.
-   * use getExistingSessions instead
+   * @return a not <code>null</code> array. use getExistingSessions instead
    */
   @Deprecated
   public static Session getSessions(IProject project) {
@@ -212,7 +222,8 @@ public class SessionHelper {
     // Iterate over active sessions to search the ones that semantic
     // resources are contained by the project.
     try {
-      ModelingProject modelingProject = (ModelingProject) project.getNature(CapellaResourceHelper.CAPELLA_PROJECT_NATURE);
+      ModelingProject modelingProject = (ModelingProject) project
+          .getNature(CapellaResourceHelper.CAPELLA_PROJECT_NATURE);
 
       if (modelingProject == null) {
         return null;
@@ -246,6 +257,7 @@ public class SessionHelper {
 
   /**
    * Whether or not given analysis file is involved in given session.
+   * 
    * @param session
    * @param analysisFile
    * @return <code>true</code> means the given session contained given analysis file.
@@ -277,6 +289,7 @@ public class SessionHelper {
 
   /**
    * Get all aird resources contained in specified session.
+   * 
    * @param session
    * @return a not <code>null</code> collection.
    */
@@ -285,26 +298,29 @@ public class SessionHelper {
     allAnalysisResources.add(session.getSessionResource());
     return allAnalysisResources;
   }
-  
+
   public static Collection<Resource> getSemanticResources(Session session) {
-	  List<Resource> resources = new ArrayList<Resource>();
-	  for (Resource resource : session.getSemanticResources()) {
-		  if (CapellaResourceHelper.isCapellaResource(resource)) {
-			  resources.add(resource);
-		  }
-	  }
-	  return resources;
+    List<Resource> resources = new ArrayList<Resource>();
+    for (Resource resource : session.getSemanticResources()) {
+      if (CapellaResourceHelper.isCapellaResource(resource)) {
+        resources.add(resource);
+      }
+    }
+    return resources;
   }
 
   /**
    * Get the session advisors.
+   * 
    * @return a not <code>null</code> list.
    */
   public static List<ISessionAdvisor> getSessionAdvisors() {
     List<ISessionAdvisor> sessionAdvisors = new ArrayList<ISessionAdvisor>(0);
-    IConfigurationElement[] configurationElements = ExtensionPointHelper.getConfigurationElements("org.polarsys.capella.core.sirius.ui", "sessionAdvisor"); //$NON-NLS-1$ //$NON-NLS-2$
+    IConfigurationElement[] configurationElements = ExtensionPointHelper
+        .getConfigurationElements("org.polarsys.capella.core.sirius.ui", "sessionAdvisor"); //$NON-NLS-1$ //$NON-NLS-2$
     if (configurationElements.length > 0) {
-      ISessionAdvisor sessionAdvisor = (ISessionAdvisor) ExtensionPointHelper.createInstance(configurationElements[0], ExtensionPointHelper.ATT_CLASS);
+      ISessionAdvisor sessionAdvisor = (ISessionAdvisor) ExtensionPointHelper.createInstance(configurationElements[0],
+          ExtensionPointHelper.ATT_CLASS);
       sessionAdvisors.add(sessionAdvisor);
     }
     return sessionAdvisors;
@@ -312,19 +328,22 @@ public class SessionHelper {
 
   /**
    * Get the session advisors.
+   * 
    * @return a not <code>null</code> list.
    */
-  //  public static List<ISessionActionListener> getSessionActionListeners() {
-  //    List<ISessionActionListener> sessionAdvisors = new ArrayList<ISessionActionListener>(0);
-  //    IConfigurationElement[] configurationElements =
-  //        ExtensionPointHelper.getConfigurationElements("org.polarsys.capella.core.sirius.ui", "sessionActionListener"); //$NON-NLS-1$ //$NON-NLS-2$
-  //    if (configurationElements.length > 0) {
-  //      ISessionActionListener sessionAdvisor =
-  //          (ISessionActionListener) ExtensionPointHelper.createInstance(configurationElements[0], ExtensionPointHelper.ATT_CLASS);
-  //      sessionAdvisors.add(sessionAdvisor);
-  //    }
-  //    return sessionAdvisors;
-  //  }
+  // public static List<ISessionActionListener> getSessionActionListeners() {
+  // List<ISessionActionListener> sessionAdvisors = new ArrayList<ISessionActionListener>(0);
+  // IConfigurationElement[] configurationElements =
+  // ExtensionPointHelper.getConfigurationElements("org.polarsys.capella.core.sirius.ui", "sessionActionListener");
+  // //$NON-NLS-1$ //$NON-NLS-2$
+  // if (configurationElements.length > 0) {
+  // ISessionActionListener sessionAdvisor =
+  // (ISessionActionListener) ExtensionPointHelper.createInstance(configurationElements[0],
+  // ExtensionPointHelper.ATT_CLASS);
+  // sessionAdvisors.add(sessionAdvisor);
+  // }
+  // return sessionAdvisors;
+  // }
 
   /**
    * Activate viewpoints in the given session
@@ -355,7 +374,8 @@ public class SessionHelper {
       DialectEditor editor = uiSession.getEditor(representation);
       if (editor instanceof IReusableEditor) {
         IReusableEditor iReusableEditor = (IReusableEditor) editor;
-        SessionEditorInput updatedEditorInput = new SessionEditorInput(EcoreUtil.getURI(representation), EObjectExt.getText(representation), session);
+        SessionEditorInput updatedEditorInput = new SessionEditorInput(EcoreUtil.getURI(representation),
+            EObjectExt.getText(representation), session);
         iReusableEditor.setInput(updatedEditorInput);
       }
     }
@@ -370,9 +390,55 @@ public class SessionHelper {
       if (dialectEditor instanceof IReusableEditor) {
         IReusableEditor iReusableEditor = (IReusableEditor) dialectEditor;
         DRepresentation representation = dialectEditor.getRepresentation();
-        SessionEditorInput updatedEditorInput = new SessionEditorInput(EcoreUtil.getURI(representation), EObjectExt.getText(representation), session);
+        SessionEditorInput updatedEditorInput = new SessionEditorInput(EcoreUtil.getURI(representation),
+            EObjectExt.getText(representation), session);
         iReusableEditor.setInput(updatedEditorInput);
       }
     }
   }
+
+  /**
+   * Returns whether the session has Sirius preference Refresh at Opening Representation defined at project level
+   */
+  public static boolean hasSpecificSettingRefreshOnRepresentationOpening(Session session) {
+    Resource aird = session.getSessionResource();
+    IFile airdFile = EcoreUtil2.getFile(aird);
+    if (airdFile != null) {
+      IProject project = airdFile.getProject();
+      if (project != null) {
+        ProjectScope projectScope = new ProjectScope(project);
+        try {
+          DAnalysis analysis = (DAnalysis) aird.getContents().get(0);
+          return projectScope
+              .getNode(FrameworkUtil.getBundle(SiriusUIPreferencesKeys.class).getSymbolicName() + analysis.getUid())
+              .keys().length > 0;
+        } catch (Exception e) {
+          // Nothing here
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Returns whether the session has Sirius preference Automatic Refresh defined at project level
+   */
+  public static boolean hasSpecificSettingAutoRefresh(Session session) {
+    Resource aird = session.getSessionResource();
+    IFile airdFile = EcoreUtil2.getFile(aird);
+    if (airdFile != null) {
+      IProject project = airdFile.getProject();
+      if (project != null) {
+        ProjectScope projectScope = new ProjectScope(project);
+        try {
+          DAnalysis analysis = (DAnalysis) aird.getContents().get(0);
+          return projectScope.getNode(SiriusPlugin.ID + analysis.getUid()).keys().length > 0;
+        } catch (Exception e) {
+          // Nothing here
+        }
+      }
+    }
+    return false;
+  }
+
 }
