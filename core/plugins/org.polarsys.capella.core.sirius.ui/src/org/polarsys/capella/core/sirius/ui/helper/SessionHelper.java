@@ -401,44 +401,14 @@ public class SessionHelper {
    * Returns whether the session has Sirius preference Refresh at Opening Representation defined at project level
    */
   public static boolean hasSpecificSettingRefreshOnRepresentationOpening(Session session) {
-    Resource aird = session.getSessionResource();
-    IFile airdFile = EcoreUtil2.getFile(aird);
-    if (airdFile != null) {
-      IProject project = airdFile.getProject();
-      if (project != null) {
-        ProjectScope projectScope = new ProjectScope(project);
-        try {
-          DAnalysis analysis = (DAnalysis) aird.getContents().get(0);
-          return projectScope
-              .getNode(FrameworkUtil.getBundle(SiriusUIPreferencesKeys.class).getSymbolicName() + analysis.getUid())
-              .keys().length > 0;
-        } catch (Exception e) {
-          // Nothing here
-        }
-      }
-    }
-    return false;
+    return session.getSiriusPreferences().hasSpecificSettingRefreshOnRepresentationOpening();
   }
 
   /**
    * Returns whether the session has Sirius preference Automatic Refresh defined at project level
    */
   public static boolean hasSpecificSettingAutoRefresh(Session session) {
-    Resource aird = session.getSessionResource();
-    IFile airdFile = EcoreUtil2.getFile(aird);
-    if (airdFile != null) {
-      IProject project = airdFile.getProject();
-      if (project != null) {
-        ProjectScope projectScope = new ProjectScope(project);
-        try {
-          DAnalysis analysis = (DAnalysis) aird.getContents().get(0);
-          return projectScope.getNode(SiriusPlugin.ID + analysis.getUid()).keys().length > 0;
-        } catch (Exception e) {
-          // Nothing here
-        }
-      }
-    }
-    return false;
+    return session.getSiriusPreferences().hasSpecificSettingAutoRefresh();
   }
 
 }
