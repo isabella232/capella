@@ -115,7 +115,7 @@ public class DynamicActionProvider extends AbstractActionProvider {
    */
   protected IContributionItem createContributionItem() {
 
-    if (userValidationActions.size() > 0) {
+    if (userValidationActions.size() > 0 && defaultValidationAction.isEnabled()) {
       IMenuManager menuManager = new MenuManager("Validate Model", imageDescriptor, "ID"); //$NON-NLS-1$ //$NON-NLS-2$
       menuManager.add(defaultValidationAction);
       menuManager.add(new Separator());
@@ -127,12 +127,15 @@ public class DynamicActionProvider extends AbstractActionProvider {
 
     imageDescriptor = CapellaValidationUIActivator.getDefault().getImageDescriptor(CapellaValidationUIActivator.IMG_ENABLED_VALIDATE);
     userValidationActions = new ArrayList<ValidateAction>();
-    defaultValidationAction = createDefaultValidation(); // createValidationAction(true, null, selectionProvider, imageDescriptor);
+    defaultValidationAction = createDefaultValidation();
 
-    IMenuManager menu = new MenuManager("Validate Model", imageDescriptor, "ID"); //$NON-NLS-1$ //$NON-NLS-2$
-    menu.add(new Separator());
-    menu.add(defaultValidationAction);
-    return menu;
+    if (defaultValidationAction.isEnabled()) {
+      IMenuManager menu = new MenuManager("Validate Model", imageDescriptor, "ID"); //$NON-NLS-1$ //$NON-NLS-2$
+      menu.add(new Separator());
+      menu.add(defaultValidationAction);
+      return menu;
+    }
+    return null;
 
   }
 

@@ -74,6 +74,12 @@
                id="org.polarsys.capella.core.validation.ui.dynamicCreateItems">
          </dynamic>
       </menuContribution>
+      
+       <menuContribution allPopups="false" locationURI="popup:org.polarsys.capella.core.ui.semantic.browser.view.SemanticBrowserID?after=group.validation">
+         <dynamic class="org.polarsys.capella.core.validation.ui.DynamicCreateContributionItem"
+               id="org.polarsys.capella.core.validation.ui.dynamicCreateItems">
+         </dynamic>
+      </menuContribution>
       <group
             id="org.polarsys.capella.core.validation.ui.groupvalidation"
             separatorsVisible="true">
